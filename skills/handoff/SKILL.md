@@ -8,9 +8,9 @@ Do not implement anything yourself. You plan, the executor implements, you verif
 
 EXECUTOR: dsh --profile headless
 
-(The line above is the only harness-specific part of this skill. To target a different
-harness, replace it with that harness's non-interactive command, e.g. `pi -p` or
-`opencode run`, and widen allowed-tools to match.)
+(To target a different harness, change the line above and the command in step 3 to that
+harness's non-interactive command, e.g. `pi -p` or `opencode run`, and widen allowed-tools
+to match. Nothing else here is harness-specific.)
 
 ## 1. Preflight
 
@@ -21,6 +21,10 @@ harness, replace it with that harness's non-interactive command, e.g. `pi -p` or
   the user to commit or stash first, so the executor's diff is exactly its own work.
 - If `.handoff/.gitignore` does not exist, write it with these two lines:
   `report.md` and `last-run.log`.
+- If the request is exploratory or leaves the scope open (e.g. "look into", "what could we
+  add", several possible features), stop here. Look into it, give the user the options with
+  a recommendation, and wait for them to choose. Do not write the spec until the scope is
+  agreed; the spec holds decisions only.
 
 ## 2. Write the spec
 
@@ -75,4 +79,4 @@ pass/fail, anything the executor said it could not do, and the exact next step. 
 executor's report and your verification disagree, say so plainly.
 
 Do not re-plan, patch, or fix failures yourself unless the user asks. The user reviews the
-diff and commits.
+diff and commits, including `.handoff/plan.md`. `report.md` and `last-run.log` stay ignored.

@@ -19,7 +19,6 @@ No MCP server, plugin, webhook, or other integration mechanism — files in, fil
 |---|---|
 | `skills/handoff/SKILL.md` (this repo) | Source of truth for the skill |
 | `~/.claude/skills/handoff/SKILL.md` | Installed copy (user level, works in every project) |
-| `~/.claude/CLAUDE.md` | Global handoff rules (section B) |
 | `~/.dsh/profiles/headless/` | Executor profile (section C) |
 | `.handoff/` (in each target repo) | `plan.md` committed; `report.md`, `last-run.log` ignored via `.handoff/.gitignore` |
 
@@ -28,12 +27,12 @@ To update the skill: edit the repo copy, then copy it over the installed one.
 ## Preconditions
 
 1. `dsh --version` succeeds and resolves to a global install
-   (`%APPDATA%\npm\dsh*`), not an `_npx` cache. Install / update:
+   (on Windows, `%APPDATA%\npm\dsh*`), not an `_npx` cache. Install / update:
    `npm install -g @deepseek-ai/dsh --allow-scripts=@deepseek-ai/dsh-subprocess-local,koffi,node-pty,@google/genai,protobufjs`
    (re-pass `--allow-scripts` on every update, or native modules are skipped).
 2. `dsh --profile headless --help` exits 0.
-3. `DEEPSEEK_API_KEY` and `BRAVE_API_KEY` are set as **Windows user environment variables**.
-   The headless bundle deliberately disables dsh's credential store ("one-shot jobs use
+3. `DEEPSEEK_API_KEY` and `BRAVE_API_KEY` are set as **environment variables** (Windows user
+   variables, or the shell profile on macOS and Linux). The headless bundle deliberately disables dsh's credential store ("one-shot jobs use
    launch-time credentials"), so keys saved on the web Models page are invisible to it.
    Rotating a key in the web UI means updating the env var too. Restart Claude Code after
    changing either.
@@ -49,7 +48,8 @@ To update the skill: edit the repo copy, then copy it over the installed one.
 See `skills/handoff/SKILL.md`. Its flow:
 
 1. **Preflight** — must be in a git repo with a clean tree (excluding `.handoff/`);
-   otherwise stop. Ensures `.handoff/.gitignore` exists.
+   otherwise stop. Ensures `.handoff/.gitignore` exists. Stops to offer options when the
+   request is exploratory or its scope is open.
 2. **Spec** — `.handoff/plan.md` with Goal / Files to touch / Steps / Acceptance /
    Parallel work / Constraints / Out of scope / If blocked. Acceptance = runnable commands
    with expected results. Parallel work names independent workstreams (files owned, steps,
@@ -64,26 +64,11 @@ See `skills/handoff/SKILL.md`. Its flow:
 5. **Report** — git's view of changes, pass/fail per Acceptance check, and any disagreement
    between the executor's self-report and verification. No fixing unless asked.
 
-## B. `~/.claude/CLAUDE.md` section
+## B. No `~/.claude/CLAUDE.md` section
 
-```markdown
-## Handoff to an external agent harness
-
-Claude Code plans and verifies; an external harness (dsh, headless profile) executes.
-
-- When asked to "hand off", "send it to the executor", "run it in dsh", "use dsh", or
-  "use deepseek" (or anything meaning "let DeepSeek implement this"), use the `handoff` skill.
-  Do not also implement the work yourself in that turn.
-- The executor starts with **zero context** from this conversation. Everything it needs must
-  be in `.handoff/plan.md`, and its Acceptance section must be runnable commands.
-- Handoffs require a git repo with a clean working tree; git is the undo button.
-- `.handoff/plan.md` is the spec and is committed. `.handoff/report.md` and
-  `.handoff/last-run.log` are the executor's output and are ignored.
-- The executor command is the single `EXECUTOR:` line in the `handoff` skill. Changing
-  harnesses means editing that one line, nothing else.
-- After a handoff, verify read-only and report. Do not re-plan, patch, or "fix up" the
-  executor's work unless explicitly asked.
-```
+The rules used to be repeated in `~/.claude/CLAUDE.md`, which cost about 250 tokens in every
+session, handoff or not. They now live only in the skill: its description carries the
+triggers, and its body loads when it is used.
 
 ## C. Headless executor profile
 
@@ -124,14 +109,15 @@ Changes made:
   config:
     provider: deepseek-official
     model: deepseek-flash
-    reasoningEffort: high
+    reasoningEffort: low
 - id: brave-search
   name: dsh-brave-search
   config:
     route: snippets
 ```
 
-Overrides replace a row's whole `config`, so every key is restated. Brave uses the
+Overrides replace a row's whole `config`, so every key is restated. Levels are `off`, `low`,
+`high` and `max`; `low` is enough because Claude Code reviews the result. Brave uses the
 `snippets` route (~440 tokens/search) rather than the web profile's `context`
 (~6,200 tokens/search) to keep the coder's context small.
 

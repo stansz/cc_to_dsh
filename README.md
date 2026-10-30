@@ -42,7 +42,7 @@ mkdir -p ~/.claude/skills/handoff
 cp skills/handoff/SKILL.md ~/.claude/skills/handoff/SKILL.md
 ```
 
-Optionally, add the rules from section B of [dsh-handoff-bootstrap.md](dsh-handoff-bootstrap.md) to `~/.claude/CLAUDE.md`.
+That is the whole install. Nothing goes in `CLAUDE.md`, because the skill holds every rule and only loads when you use it.
 
 ## Usage
 
@@ -61,7 +61,7 @@ Each project gets a `.handoff/` folder. `plan.md` is meant to be committed. `rep
 
 ## Configuring the executor
 
-The skill works with the default headless profile. Section C of [dsh-handoff-bootstrap.md](dsh-handoff-bootstrap.md) shows how to add agent teams, Brave search, and a higher reasoning effort in `~/.dsh/profiles/headless/`.
+The skill works with the default headless profile. Section C of [dsh-handoff-bootstrap.md](dsh-handoff-bootstrap.md) shows how to add agent teams and Brave search, and how to set the reasoning effort, in `~/.dsh/profiles/headless/`.
 
 By default the headless sandbox allows writes inside the project and network access. It blocks writes outside the project, and approval requests are denied automatically because nobody is there to answer them. `dsh` may work around this with files such as a project-local `.npm-cache/`, which will show up in your diff.
 
