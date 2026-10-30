@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Write an execution spec to .handoff/plan.md, run it in a non-interactive agent harness (dsh) in the background, verify the result, and report. Use when the user says "hand off", "send it to the executor", "run it in dsh", or asks to stop planning and let another harness implement the work.
+description: Write an execution spec to .handoff/plan.md, run it in a non-interactive agent harness (dsh) in the background, verify the result, and report. Use when the user says "hand off" or "hand it off to dsh", "send it to the executor", "run it in dsh", "use dsh", "use deepseek", "have deepseek/dsh do it", or otherwise asks to stop planning and let DeepSeek or another harness implement the work.
 allowed-tools: Read, Glob, Grep, Write, Bash(dsh:*), Bash(git rev-parse:*), Bash(git status:*), Bash(git diff:*)
 ---
 

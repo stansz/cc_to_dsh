@@ -68,8 +68,9 @@ See `skills/handoff/SKILL.md`. Its flow:
 
 Claude Code plans and verifies; an external harness (dsh, headless profile) executes.
 
-- When asked to "hand off", "send it to the executor", or "run it in dsh", use the `handoff`
-  skill. Do not also implement the work yourself in that turn.
+- When asked to "hand off", "send it to the executor", "run it in dsh", "use dsh", or
+  "use deepseek" (or anything meaning "let DeepSeek implement this"), use the `handoff` skill.
+  Do not also implement the work yourself in that turn.
 - The executor starts with **zero context** from this conversation. Everything it needs must
   be in `.handoff/plan.md`, and its Acceptance section must be runnable commands.
 - Handoffs require a git repo with a clean working tree; git is the undo button.
