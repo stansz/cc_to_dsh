@@ -51,9 +51,12 @@ See `skills/handoff/SKILL.md`. Its flow:
 1. **Preflight** — must be in a git repo with a clean tree (excluding `.handoff/`);
    otherwise stop. Ensures `.handoff/.gitignore` exists.
 2. **Spec** — `.handoff/plan.md` with Goal / Files to touch / Steps / Acceptance /
-   Constraints / Out of scope / If blocked. Acceptance = runnable commands with expected
-   results. Constraints always forbid commit/push/branch switches and edits outside
-   Files to touch.
+   Parallel work / Constraints / Out of scope / If blocked. Acceptance = runnable commands
+   with expected results. Parallel work names independent workstreams (files owned, steps,
+   own acceptance command, plus a final integration step) or says `None — do it
+   sequentially.`; the executor prompt tells dsh to delegate listed workstreams with its
+   agent-team tools. Constraints always forbid commit/push/branch switches and edits
+   outside Files to touch.
 3. **Run** — `dsh --profile headless "<prompt>" > .handoff/last-run.log 2>&1` via Bash with
    `run_in_background: true` (no 2/10-minute Bash timeout; Claude is notified on exit).
 4. **Verify (read-only)** — read `report.md` (fallback: `last-run.log`), `git status`,

@@ -30,6 +30,7 @@ Write `.handoff/plan.md` with exactly these sections:
     ## Files to touch
     ## Steps
     ## Acceptance
+    ## Parallel work
     ## Constraints
     ## Out of scope
     ## If blocked
@@ -38,6 +39,14 @@ Write `.handoff/plan.md` with exactly these sections:
   of this conversation: name exact file paths, function names, commands, and versions.
 - **Acceptance** is a list of runnable commands, each with its expected result
   (e.g. `npm test` exits 0; `node greet.js` prints `hello`). No prose-only criteria.
+- **Parallel work** decides delegation for the executor:
+  - Split into named workstreams when the task has two or more substantial pieces that
+    share no files and need no result from each other (e.g. backend endpoint + frontend
+    page + docs). For each workstream list: the files it owns, its steps, and its own
+    acceptance command. Then add one final integration step for the lead that runs the
+    full **Acceptance** after all workstreams finish.
+  - Otherwise write `None — do it sequentially.` Small tasks, tightly coupled changes,
+    or anything touching the same files stay sequential; delegation overhead is not free.
 - **Constraints** always includes: do not commit, push, or switch branches; do not touch
   files outside **Files to touch** except `.handoff/report.md`.
 
@@ -46,7 +55,7 @@ Write `.handoff/plan.md` with exactly these sections:
 From the top-level directory, run the EXECUTOR with the Bash tool and
 `run_in_background: true`, sending all output to `.handoff/last-run.log`:
 
-    dsh --profile headless "Implement .handoff/plan.md exactly as written. Before you finish, write .handoff/report.md listing files changed, commands run and their results, anything you could not do, and the exact next step. If a step is wrong or impossible, stop and report instead of improvising. Do not commit, push, or switch branches." > .handoff/last-run.log 2>&1
+    dsh --profile headless "Implement .handoff/plan.md exactly as written. Before you finish, write .handoff/report.md listing files changed, commands run and their results, anything you could not do, and the exact next step. If a step is wrong or impossible, stop and report instead of improvising. Do not commit, push, or switch branches. If the plan's Parallel work section lists workstreams, delegate each one to a teammate or subagent with your agent-team or subagent tools, give each only its own files, wait for all of them, then run the integration step yourself; say in the report which workstreams were delegated." > .handoff/last-run.log 2>&1
 
 Tell the user the executor is running. Do not poll; you will be notified when it exits.
 
