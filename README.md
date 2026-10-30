@@ -11,8 +11,8 @@ The two tools only talk through files, so there is no MCP server, plugin, or web
 1. **Preflight:** the project must be a git repo with a clean working tree, so the executor's diff is exactly its own work and you can undo it.
 2. **Spec:** Claude Code writes `.handoff/plan.md`. The executor sees none of the conversation, so the plan holds everything it needs, including runnable acceptance commands.
 3. **Run:** `dsh --profile headless` runs in the background, logging to `.handoff/last-run.log`. You can keep chatting while it works.
-4. **Verify:** Claude Code reads `.handoff/report.md`, checks `git status` and `git diff --stat`, and runs every acceptance command itself. It doesn't rely on the executor's own account.
-5. **Report:** you get what changed, pass or fail for each check, and any disagreement between the report and the checks. You review the diff and commit.
+4. **Verify and review:** Claude Code reads `.handoff/report.md`, checks `git status`, and runs every acceptance command itself. It then reads the full diff and any new files and reviews them against the plan. It doesn't rely on the executor's own account.
+5. **Report:** you get what changed, pass or fail for each check, the code review findings, and any disagreement between the report and the checks. Claude Code doesn't fix anything unless you ask. You make the final call on the diff and commit.
 
 When the work splits into independent pieces that share no files, the plan lists them as parallel workstreams and tells `dsh` to delegate each one to a teammate or subagent. Small or tightly coupled tasks stay sequential.
 
@@ -67,7 +67,7 @@ By default the headless sandbox allows writes inside the project and network acc
 
 ## Using a different harness
 
-The `EXECUTOR:` line in [SKILL.md](skills/handoff/SKILL.md) names the executor. To switch, change that line and the `dsh` command in the skill's run step to the other tool's non-interactive command, then widen `allowed-tools` to match. The spec format, report contract, and file paths are harness-neutral.
+The `EXECUTOR:` line in [SKILL.md](skills/handoff/SKILL.md) names the executor. To switch, change that line and the `dsh` command in the skill's run step to the other tool's non-interactive command, widen `allowed-tools` to match, and update the harness names in the skill's description. The spec format, report contract, and file paths are harness-neutral.
 
 ## Repository layout
 

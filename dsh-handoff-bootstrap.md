@@ -7,9 +7,10 @@ implements. When I say "hand off", "send it to the executor", or "run it in dsh"
 writes an execution spec to `.handoff/plan.md`, runs the executor in the background, verifies
 the result read-only, and reports back.
 
-The only harness-specific part is one `EXECUTOR:` line in the skill. The spec format, report
-contract, and paths are harness-neutral, so the executor can be swapped (Pi, opencode,
-anything with a non-interactive CLI) by editing that line.
+The harness-specific parts of the skill are the `EXECUTOR:` line, the command in its run step,
+`allowed-tools`, and the harness names in its description. The spec format, report contract,
+and paths are harness-neutral, so the executor can be swapped (Pi, opencode, anything with a
+non-interactive CLI) by editing those.
 
 No MCP server, plugin, webhook, or other integration mechanism — files in, files out.
 
@@ -47,9 +48,9 @@ To update the skill: edit the repo copy, then copy it over the installed one.
 
 See `skills/handoff/SKILL.md`. Its flow:
 
-1. **Preflight** — must be in a git repo with a clean tree (excluding `.handoff/`);
-   otherwise stop. Ensures `.handoff/.gitignore` exists. Stops to offer options when the
-   request is exploratory or its scope is open.
+1. **Preflight** — first stops to offer options when the request is exploratory or its scope
+   is open. Then must be in a git repo with a clean tree (excluding `.handoff/`); otherwise
+   stop. Ensures `.handoff/.gitignore` exists.
 2. **Spec** — `.handoff/plan.md` with Goal / Files to touch / Steps / Acceptance /
    Parallel work / Constraints / Out of scope / If blocked. Acceptance = runnable commands
    with expected results. Parallel work names independent workstreams (files owned, steps,
@@ -59,10 +60,12 @@ See `skills/handoff/SKILL.md`. Its flow:
    outside Files to touch.
 3. **Run** — `dsh --profile headless "<prompt>" > .handoff/last-run.log 2>&1` via Bash with
    `run_in_background: true` (no 2/10-minute Bash timeout; Claude is notified on exit).
-4. **Verify (read-only)** — read `report.md` (fallback: `last-run.log`), `git status`,
-   `git diff --stat`, run every Acceptance command.
-5. **Report** — git's view of changes, pass/fail per Acceptance check, and any disagreement
-   between the executor's self-report and verification. No fixing unless asked.
+4. **Verify and review (read-only)** — read `report.md` (fallback: `last-run.log`),
+   `git status`, `git diff --stat`, run every Acceptance command, then read the full diff and
+   new files and review them against the plan.
+5. **Report** — git's view of changes, pass/fail per Acceptance check, code review findings,
+   and any disagreement between the executor's self-report and verification. No fixing
+   unless asked.
 
 ## B. No `~/.claude/CLAUDE.md` section
 
@@ -117,7 +120,8 @@ Changes made:
 ```
 
 Overrides replace a row's whole `config`, so every key is restated. Levels are `off`, `low`,
-`high` and `max`; `low` is enough because Claude Code reviews the result. Brave uses the
+`high` and `max`; `low` is enough because Claude Code reads the full diff and reviews it
+against the plan in the skill's verify step. Brave uses the
 `snippets` route (~440 tokens/search) rather than the web profile's `context`
 (~6,200 tokens/search) to keep the coder's context small.
 
@@ -163,7 +167,7 @@ https://code.claude.com/docs/en/hooks):
 
 - Windows, PowerShell / Git Bash.
 - Do not commit during setup; leave the working tree for review.
-- No multi-executor config or per-harness branching. One skill, one `EXECUTOR:` line.
+- No multi-executor config or per-harness branching. One skill, one executor.
 
 ## Out of scope
 
