@@ -55,6 +55,22 @@ Write `.handoff/plan.md` with exactly these sections:
 - **Constraints** always includes: do not commit, push, or switch branches; do not touch
   files outside **Files to touch** except `.handoff/report.md`.
 
+Then check the **Acceptance** commands, before the executor spends anything on them. The
+code does not exist yet, so this tests the command, not the result:
+
+- Check each command whose flags, paths, or arguments depend on the installed tool (test
+  runners, linters, build tools). Skip commands that only run a file the plan creates
+  (`node greet.js`) or standard git commands.
+- Make a new temporary directory outside the repo with `mktemp -d`. Put the smallest
+  example there that the command needs, in the layout the plan uses (e.g. one passing test
+  file in `lib/`), and run the command from that directory. This example is the only code
+  you write, and it never goes in the repo.
+- If the command itself fails (unknown flag, tool missing, a path read the wrong way), fix
+  it in `.handoff/plan.md` and check it again. If you cannot make it work, stop and tell the
+  user.
+- If a command cannot be tried on a small example (a full app build, anything needing a
+  running service), leave it as written and name it in your report as unchecked.
+
 ## 3. Run the executor
 
 From the top-level directory, run the EXECUTOR with the Bash tool and
@@ -80,9 +96,9 @@ When the run finishes:
 ## 5. Report
 
 Report: exit status, files changed (from git, not the report), each Acceptance check with
-pass/fail, your code review findings (or that you found none), anything the executor said
-it could not do, and the exact next step. Where the executor's report and your verification
-disagree, say so plainly.
+pass/fail, any Acceptance commands left unchecked before the run, your code review findings
+(or that you found none), anything the executor said it could not do, and the exact next
+step. Where the executor's report and your verification disagree, say so plainly.
 
 Do not re-plan, patch, or fix failures yourself unless the user asks. The user reviews the
 diff and commits, including `.handoff/plan.md`. `report.md` and `last-run.log` stay ignored.

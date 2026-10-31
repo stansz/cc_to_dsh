@@ -9,7 +9,7 @@ The two tools only talk through files, so there is no MCP server, plugin, or web
 ## How it works
 
 1. **Preflight:** the project must be a git repo with a clean working tree, so the executor's diff is exactly its own work and you can undo it.
-2. **Spec:** Claude Code writes `.handoff/plan.md`. The executor sees none of the conversation, so the plan holds everything it needs, including runnable acceptance commands.
+2. **Spec:** Claude Code writes `.handoff/plan.md`. The executor sees none of the conversation, so the plan holds everything it needs, including runnable acceptance commands. Claude Code then tries tool-dependent commands on a small temporary example, so a command that can't work is fixed before `dsh` spends anything. This may ask for permission to run tools like `node` or `npm`. Commands that can't be tried on a small example are left as written and flagged as unchecked in the final report.
 3. **Run:** `dsh --profile headless` runs in the background, logging to `.handoff/last-run.log`. You can keep chatting while it works.
 4. **Verify and review:** Claude Code reads `.handoff/report.md`, checks `git status`, and runs every acceptance command itself. It then reads the full diff and any new files and reviews them against the plan. It doesn't rely on the executor's own account.
 5. **Report:** you get what changed, pass or fail for each check, the code review findings, and any disagreement between the report and the checks. Claude Code doesn't fix anything unless you ask. You make the final call on the diff and commit.

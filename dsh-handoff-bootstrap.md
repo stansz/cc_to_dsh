@@ -57,7 +57,9 @@ See `skills/handoff/SKILL.md`. Its flow:
    own acceptance command, plus a final integration step) or says `None — do it
    sequentially.`; the executor prompt tells dsh to delegate listed workstreams with its
    agent-team tools. Constraints always forbid commit/push/branch switches and edits
-   outside Files to touch.
+   outside Files to touch. Tool-dependent Acceptance commands are then tried on a small
+   example in a temporary directory outside the repo; a command that fails is fixed in the
+   plan, and one that cannot be tried is reported as unchecked.
 3. **Run** — `dsh --profile headless "<prompt>" > .handoff/last-run.log 2>&1` via Bash with
    `run_in_background: true` (no 2/10-minute Bash timeout; Claude is notified on exit).
 4. **Verify and review (read-only)** — read `report.md` (fallback: `last-run.log`),
