@@ -13,6 +13,25 @@ harness's non-interactive command, e.g. `pi -p` or `opencode run`, widen allowed
 match, and update the harness names in the description. Nothing else here is
 harness-specific.)
 
+## Cache discipline
+
+The executor's provider caches the prompt prefix: the fixed prompt in step 3, then
+`.handoff/plan.md` as the executor reads it, turn after turn. Cached input costs a small
+fraction of uncached input. If one byte near the top changes, everything after it is
+uncached for the rest of the run, so a small "improvement" to the plan can cost far more
+than it saves. These rules keep the prefix byte-identical:
+
+- **Never rewrite `.handoff/plan.md` once the executor has started.** That includes typo
+  fixes, rewording, reordering, and fixing a wrong Acceptance command. Before the first run
+  (step 2) you may edit it freely. After that, add an `## Amendments` section at the end of
+  the file, or append to it if it is already there. Each amendment names the section and
+  item it overrides and says what is now true. Earlier text stays exactly as it is.
+- **Never put anything that changes between runs in the executor prompt:** no timestamp,
+  date, run ID, branch name, or per-run note. Use the step 3 command word for word. Anything
+  that differs per run goes in `## Amendments`.
+- If the plan seems to need a rewrite partway through, don't rewrite it. Append an
+  amendment, or stop and tell the user that the task needs a new plan.
+
 ## 1. Preflight
 
 - If the request is exploratory or leaves the scope open (e.g. "look into", "what could we
