@@ -6,6 +6,11 @@ This is a single Claude Code skill. You brainstorm and plan in Claude Code, then
 
 The two tools only talk through files, so there is no MCP server, plugin, or webhook to maintain.
 
+> **Want dsh to have full access (browser, `dnf install`, any tool) without trusting it with your machine?**
+> [dsh-vm](https://github.com/stansz/dsh-vm) runs the same handoff inside a throwaway microVM
+> (Podman + libkrun) on a clone of your repo, and is now the recommended default on Linux with KVM.
+> See [Running in a microVM](#running-in-a-microvm) below.
+
 ## How it works
 
 1. **Preflight:** the project must be a git repo with a clean working tree, so the executor's diff is exactly its own work and you can undo it.
@@ -65,6 +70,28 @@ The skill works with the default headless profile. Section C of [dsh-handoff-boo
 
 By default the headless sandbox allows writes inside the project and network access. It blocks writes outside the project, and approval requests are denied automatically because nobody is there to answer them. `dsh` may work around this with files such as a project-local `.npm-cache/`, which will show up in your diff.
 
+## Running in a microVM
+
+[dsh-vm](https://github.com/stansz/dsh-vm) is a companion repo that keeps this skill's plan,
+verify and report flow but moves the run step into a microVM:
+
+- `dsh-vm run` clones the repo (with `.handoff/`) into `~/.cache/dsh-vm/runs/<repo>-<time>/` and
+  runs `dsh --profile headless --permission-mode danger-full-access` in `podman --runtime krun`:
+  its own kernel, 2 GB, 2 CPUs, deleted on exit.
+- Inside, dsh runs as root with no sandbox and no approvals, so it can use headless Chromium,
+  `dnf install` packages, compile native modules, and use the network. It has no SSH keys,
+  `gh` token or git remote, so it cannot push.
+- Claude Code verifies in the run dir, and `dsh-vm apply` brings the changes into your repo as
+  uncommitted changes only after you approve.
+
+dsh-vm ships its own skill named `handoff`, which replaces this one. Its README shows how to keep
+this one as `handoff-local`, a fallback for machines without Podman or KVM:
+
+| Skill | Where dsh runs | Security boundary |
+|---|---|---|
+| `handoff` (from dsh-vm) | microVM, on a clone | the VM + no push credentials |
+| `handoff-local` (this repo, renamed) | your host, in your repo | dsh's own sandbox |
+
 ## Using a different harness
 
 The `EXECUTOR:` line in [SKILL.md](skills/handoff/SKILL.md) names the executor. To switch, change that line and the `dsh` command in the skill's run step to the other tool's non-interactive command, widen `allowed-tools` to match, and update the harness names in the skill's description. The spec format, report contract, and file paths are harness-neutral.
@@ -75,3 +102,4 @@ The `EXECUTOR:` line in [SKILL.md](skills/handoff/SKILL.md) names the executor. 
 |---|---|
 | [skills/handoff/SKILL.md](skills/handoff/SKILL.md) | The skill (source of truth) |
 | [dsh-handoff-bootstrap.md](dsh-handoff-bootstrap.md) | Design notes, profile setup, and the deferred hook design |
+| [stansz/dsh-vm](https://github.com/stansz/dsh-vm) (separate repo) | The microVM executor and its `handoff` skill |

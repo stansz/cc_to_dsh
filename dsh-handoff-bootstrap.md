@@ -25,6 +25,11 @@ No MCP server, plugin, webhook, or other integration mechanism — files in, fil
 
 To update the skill: edit the repo copy, then copy it over the installed one.
 
+If [dsh-vm](https://github.com/stansz/dsh-vm) is installed, `~/.claude/skills/handoff/` holds
+its microVM skill instead, and this repo's skill is installed as
+`~/.claude/skills/handoff-local/` (`name: handoff-local`, description narrowed to trigger only on
+"handoff-local" / "without a VM"). See Phase 3.
+
 ## Preconditions
 
 1. `dsh --version` succeeds and resolves to a global install
@@ -165,9 +170,30 @@ https://code.claude.com/docs/en/hooks):
 5. Use exec form (`"command": "powershell.exe", "args": [...]`) to avoid shell quoting.
 6. Verification step 4 ("second write does not fire") inverts once `once` is dropped.
 
+---
+
+# Phase 3 — microVM executor (built, in [dsh-vm](https://github.com/stansz/dsh-vm))
+
+Why: the headless sandbox has to block browsers, package installs and writes outside the
+project to be safe, which limits what a handoff can do. Moving the run into a microVM makes
+the VM the boundary, so dsh can run with `danger-full-access`.
+
+Decisions (details and tests in the dsh-vm README):
+
+- **libkrun via `podman --runtime krun`**, not Firecracker: virtiofs folder sharing (Firecracker
+  has block devices only), rootless with no TAP/NAT setup, and any OCI image works.
+- **A `git clone --no-hardlinks` per run, not a worktree:** a worktree's `.git` points back into
+  the real repo, which would have to be mounted into the VM. The clone's remote is removed and
+  no credentials go in, so the executor cannot push.
+- **dsh runs as root in the VM** so it can `dnf install`; rootless Podman maps that root to the
+  host user. sudo does not work under krun (setuid gets no root over virtiofs).
+- **Verify happens in the run dir**; `dsh-vm apply` replays the diff into the repo only after
+  the user approves, then `dsh-vm clean` deletes the run.
+- The skill's plan format, cache discipline, Acceptance checks and report are unchanged.
+
 ## Constraints
 
-- Windows, PowerShell / Git Bash.
+- Windows, PowerShell / Git Bash (Phases 1–2). Phase 3 needs Linux with KVM.
 - Do not commit during setup; leave the working tree for review.
 - No multi-executor config or per-harness branching. One skill, one executor.
 
